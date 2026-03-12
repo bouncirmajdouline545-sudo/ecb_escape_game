@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ECB ESCAPE GAME</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#07111f;--deep:#050d18;--mid:#0e1e35;--panel:#0c1a2e;
+  --gold:#c9a84c;--gold-l:#e8c96a;--teal:#00b4d8;
+  --green:#27ae60;--red:#e74c3c;--orange:#e67e22;
+  --muted:#3d5a75;--text:#b8cfe0;--white:#eef6ff;
+  --border:rgba(201,168,76,.15);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{font-size:16px;}
+body{
+  background:var(--deep);color:var(--text);
+  font-family:'Crimson Pro',Georgia,serif;
+  min-height:100vh;overflow-x:hidden;
+}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9000;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+}
+
+/* ═══════════════ SCREENS ═══════════════ */
+.screen{display:none;min-height:100vh;flex-direction:column;align-items:center;}
+.screen.active{display:flex;}
+
+/* ═══════════════ COVER ═══════════════ */
+#s-cover{
+  justify-content:center;text-align:center;
+  padding:2rem 1.5rem;position:relative;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 30%,#122040 0%,var(--deep) 70%);
+}
+.grid-bg{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(201,168,76,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.04) 1px,transparent 1px);
+  background-size:55px 55px;animation:gPulse 7s ease-in-out infinite;
+}
+@keyframes gPulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+.vault-ring{
+  width:180px;height:180px;border:2px solid var(--gold);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;margin:0 auto 1.8rem;
+  box-shadow:0 0 50px rgba(201,168,76,.2);
+  animation:spin 25s linear infinite;
+}
+.vault-ring::before{
+  content:'';position:absolute;inset:14px;border:1px solid rgba(201,168,76,.25);border-radius:50%;
+}
+.vault-emoji{font-size:4.5rem;animation:spin 25s linear reverse infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.cover-title{
+  font-family:'Cinzel',serif;font-size:clamp(2rem,7vw,4rem);
+  font-weight:900;color:var(--gold);letter-spacing:.15em;
+  text-shadow:0 0 40px rgba(201,168,76,.35);
+}
+.cover-sub{
+  font-family:'Cinzel',serif;font-size:clamp(.9rem,3vw,1.3rem);
+  color:var(--teal);letter-spacing:.3em;margin-top:.4rem;
+}
+.cover-line{width:260px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:1.4rem auto;}
+.cover-desc{font-size:.95rem;color:var(--muted);font-style:italic;margin-bottom:2rem;letter-spacing:.05em;}
+
+.btn{
+  font-family:'Cinzel',serif;font-size:1rem;font-weight:700;
+  letter-spacing:.18em;color:var(--navy);
+  background:linear-gradient(135deg,var(--gold),var(--gold-l));
+  border:none;padding:.85rem 2.4rem;cursor:pointer;
+  clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
+  transition:all .25s;box-shadow:0 0 25px rgba(201,168,76,.25);
+  display:inline-block;text-align:center;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 0 45px rgba(201,168,76,.45);}
+.btn:active{transform:translateY(0);}
+.btn-ghost{
+  font-family:'Share Tech Mono',monospace;font-size:.8rem;letter-spacing:.1em;
+  color:var(--muted);background:none;border:1px solid rgba(74,106,138,.3);
+  padding:.45rem 1.2rem;cursor:pointer;transition:all .2s;
+}
+.btn-ghost:hover{color:var(--gold);border-color:var(--gold);}
+
+/* ═══════════════ TEAM ENTRY ═══════════════ */
+#s-team{justify-content:center;padding:2rem 1.5rem;max-width:480px;margin:0 auto;width:100%;}
+.form-label{font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.25em;color:var(--gold);margin-bottom:.5rem;display:block;}
+.form-input{
+  width:100%;background:var(--panel);border:1px solid var(--border);
+  color:var(--white);font-family:'Crimson Pro',serif;font-size:1.1rem;
+  padding:.85rem 1rem;outline:none;transition:border-color .2s;margin-bottom:1.4rem;
+}
+.form-input:focus{border-color:var(--gold);}
+.form-input::placeholder{color:var(--muted);}
+
+/* ═══════════════ BRIEFING (before each module) ═══════════════ */
+#s-briefing{padding:1.5rem;max-width:700px;width:100%;}
+.briefing-header{
+  background:var(--mid);border-left:3px solid var(--gold);
+  padding:1.2rem 1.5rem;margin-bottom:1.5rem;
+}
+.module-tag{font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.25em;color:var(--gold);margin-bottom:.35rem;}
+.briefing-title{font-family:'Cinzel',serif;font-size:1.5rem;font-weight:700;color:var(--white);}
+
+.doc-section{margin-bottom:1.5rem;}
+.doc-heading{
+  font-family:'Cinzel',serif;font-size:.95rem;font-weight:700;
+  color:var(--teal);letter-spacing:.08em;text-transform:uppercase;
+  padding:.6rem 0;border-bottom:1px solid var(--border);margin-bottom:.9rem;
+}
+.doc-body{font-size:1rem;line-height:1.75;color:var(--text);}
+.doc-body p{margin-bottom:.8rem;}
+.doc-body strong{color:var(--gold-l);}
+.doc-body em{color:var(--teal);font-style:italic;}
+.doc-body ul{padding-left:1.3rem;margin-bottom:.8rem;}
+.doc-body li{margin-bottom:.4rem;}
+.doc-note{
+  background:rgba(0,180,216,.06);border-left:2px solid var(--teal);
+  padding:.8rem 1rem;font-size:.95rem;font-style:italic;color:var(--teal);
+  margin:.8rem 0;
+}
+.doc-key{
+  background:rgba(201,168,76,.06);border-left:2px solid var(--gold);
+  padding:.8rem 1rem;font-size:.95rem;color:var(--text);
+  margin:.8rem 0;
+}
+.doc-key strong{color:var(--gold);}
+
+.briefing-cta{
+  background:var(--panel);border:1px solid var(--border);
+  padding:1.2rem 1.5rem;margin-top:1.5rem;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+}
+.cta-warning{font-size:.9rem;color:var(--muted);}
+.cta-warning strong{color:var(--orange);}
+
+/* ═══════════════ ROOM (questions) ═══════════════ */
+#s-room{padding:1rem 1.2rem;max-width:680px;width:100%;}
+
+.room-topbar{
+  display:flex;align-items:center;gap:.8rem;
+  padding:.8rem 1rem;background:var(--panel);border:1px solid var(--border);
+  margin-bottom:1.2rem;
+}
+.module-pill{
+  font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.15em;
+  color:var(--navy);background:var(--gold);padding:.25rem .6rem;
+  white-space:nowrap;
+}
+.room-title-bar{flex:1;font-family:'Cinzel',serif;font-size:.95rem;color:var(--white);}
+.timer-box{
+  font-family:'Share Tech Mono',monospace;font-size:1.1rem;
+  color:var(--gold);background:rgba(0,0,0,.4);
+  border:1px solid rgba(201,168,76,.3);padding:.3rem .7rem;
+  white-space:nowrap;min-width:70px;text-align:center;
+}
+.timer-box.warn{color:var(--orange);border-color:var(--orange);animation:blink 1s ease infinite;}
+.timer-box.crit{color:var(--red);border-color:var(--red);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+.progress-wrap{height:3px;background:rgba(255,255,255,.06);margin-bottom:1.4rem;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-l));transition:width .4s;box-shadow:0 0 8px rgba(201,168,76,.5);}
+
+.q-card{
+  background:var(--panel);border:1px solid var(--border);
+  border-left:3px solid var(--gold);padding:1.4rem 1.5rem;
+  margin-bottom:1.2rem;
+  animation:slideUp .4s ease both;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.q-card.correct{border-left-color:var(--green);}
+.q-card.wrong{border-left-color:var(--red);}
+
+.q-num{font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.2em;color:var(--gold);margin-bottom:.6rem;}
+.q-text{font-size:1.05rem;line-height:1.65;color:var(--white);margin-bottom:1.1rem;}
+
+/* Ordering question */
+.order-list{display:flex;flex-direction:column;gap:.5rem;margin-bottom:.8rem;}
+.order-item{
+  background:rgba(0,0,0,.3);border:1px solid rgba(74,106,138,.3);
+  padding:.7rem 1rem;display:flex;align-items:center;gap:.8rem;
+  cursor:grab;user-select:none;touch-action:none;
+  font-size:.95rem;color:var(--text);transition:border-color .2s,background .2s;
+}
+.order-item:active{cursor:grabbing;}
+.order-item.dragging{opacity:.4;border-color:var(--gold);}
+.order-item.drag-over{border-color:var(--teal);background:rgba(0,180,216,.08);}
+.order-handle{color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:.75rem;flex-shrink:0;}
+.order-item.locked-order{cursor:default;}
+
+/* MC options */
+.options{display:flex;flex-direction:column;gap:.55rem;margin-bottom:.8rem;}
+.opt-btn{
+  background:rgba(0,0,0,.3);border:1px solid rgba(74,106,138,.25);
+  color:var(--text);padding:.8rem 1rem;
+  font-family:'Crimson Pro',serif;font-size:1rem;
+  text-align:left;cursor:pointer;transition:all .18s;
+  display:flex;align-items:flex-start;gap:.75rem;width:100%;
+}
+.opt-btn:hover:not(:disabled){border-color:var(--gold);background:rgba(201,168,76,.07);color:var(--white);}
+.opt-btn.correct{border-color:var(--green)!important;background:rgba(39,174,96,.1)!important;color:var(--green)!important;}
+.opt-btn.wrong{border-color:var(--red)!important;background:rgba(231,76,60,.1)!important;color:var(--red)!important;}
+.opt-btn:disabled{cursor:default;}
+.opt-letter{font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--muted);flex-shrink:0;padding-top:2px;}
+.opt-btn.correct .opt-letter,.opt-btn.wrong .opt-letter{color:inherit;}
+
+/* Feedback */
+.q-feedback{
+  font-size:.9rem;font-style:italic;padding:.7rem .9rem;margin-top:.6rem;display:none;
+}
+.q-feedback.show{display:block;}
+.q-feedback.ok{background:rgba(39,174,96,.08);color:var(--green);border-left:2px solid var(--green);}
+.q-feedback.bad{background:rgba(231,76,60,.08);color:var(--red);border-left:2px solid var(--red);}
+
+/* Hint */
+.hints-bar{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.7rem 1rem;background:rgba(0,0,0,.25);
+  border:1px solid var(--border);margin-bottom:1rem;flex-wrap:wrap;
+}
+.hints-label{font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.15em;color:var(--muted);}
+.hint-chip{
+  font-family:'Share Tech Mono',monospace;font-size:.7rem;
+  border:1px solid rgba(201,168,76,.3);padding:.25rem .6rem;
+  cursor:pointer;color:var(--gold);background:rgba(201,168,76,.05);
+  transition:all .2s;
+}
+.hint-chip:hover{background:rgba(201,168,76,.12);}
+.hint-chip.used{color:var(--muted);border-color:rgba(74,106,138,.2);cursor:default;}
+.hint-text{
+  font-size:.88rem;font-style:italic;color:var(--teal);
+  padding:.6rem .9rem;border-left:2px solid var(--teal);
+  background:rgba(0,180,216,.06);margin-bottom:.8rem;
+  display:none;
+}
+.hint-text.show{display:block;}
+
+.check-btn{
+  font-family:'Cinzel',serif;font-size:.85rem;font-weight:700;
+  letter-spacing:.15em;color:var(--navy);
+  background:linear-gradient(135deg,var(--gold),var(--gold-l));
+  border:none;padding:.7rem 2rem;cursor:pointer;margin-top:.4rem;
+  transition:all .2s;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+}
+.check-btn:hover{opacity:.9;}
+.check-btn:disabled{opacity:.4;cursor:default;}
+
+/* ═══════════════ MODULE COMPLETE ═══════════════ */
+#s-modcomplete{justify-content:center;text-align:center;padding:2rem 1.5rem;max-width:500px;width:100%;}
+.complete-ring{
+  width:140px;height:140px;border:2px solid var(--green);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 1.5rem;
+  box-shadow:0 0 40px rgba(39,174,96,.25);
+  animation:completePulse 2s ease-in-out infinite;
+}
+@keyframes completePulse{0%,100%{box-shadow:0 0 40px rgba(39,174,96,.25)}50%{box-shadow:0 0 70px rgba(39,174,96,.5)}}
+.complete-icon{font-size:3.8rem;}
+.complete-title{font-family:'Cinzel',serif;font-size:1.8rem;font-weight:900;color:var(--green);letter-spacing:.1em;margin-bottom:.4rem;}
+.complete-digit{
+  font-family:'Share Tech Mono',monospace;font-size:3.5rem;color:var(--gold);
+  background:var(--panel);border:2px solid var(--gold);
+  display:inline-block;padding:.4rem 1.5rem;margin:1rem 0;
+  box-shadow:0 0 20px rgba(201,168,76,.25);
+}
+.complete-meta{font-size:.95rem;color:var(--muted);margin-bottom:.5rem;}
+.penalty-note{font-size:.85rem;color:var(--red);margin-bottom:1.5rem;}
+
+/* ═══════════════ SCOREBOARD / VAULT ═══════════════ */
+#s-vault{
+  justify-content:center;text-align:center;padding:2rem 1.5rem;
+  background:radial-gradient(ellipse at 50% 40%,#092509 0%,var(--deep) 70%);
+  max-width:600px;width:100%;position:relative;overflow:hidden;
+}
+.particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.pt{
+  position:absolute;width:5px;height:5px;border-radius:50%;
+  animation:ptFly 3s ease-in infinite;opacity:0;
+}
+@keyframes ptFly{0%{transform:translateY(100vh) scale(0);opacity:0}20%{opacity:1}100%{transform:translateY(-20vh) scale(1.5);opacity:0}}
+.vault-title{font-family:'Cinzel',serif;font-size:clamp(1.8rem,6vw,3rem);font-weight:900;color:var(--green);letter-spacing:.12em;text-shadow:0 0 30px rgba(39,174,96,.4);}
+.code-boxes{display:flex;gap:.8rem;justify-content:center;margin:1.5rem 0;}
+.code-box{
+  width:65px;height:85px;background:var(--panel);border:2px solid var(--gold);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 0 18px rgba(201,168,76,.25);
+}
+.code-num{font-family:'Cinzel',serif;font-size:2.4rem;font-weight:900;color:var(--gold);}
+.code-lbl{font-family:'Share Tech Mono',monospace;font-size:.5rem;color:var(--muted);letter-spacing:.1em;margin-top:.15rem;}
+
+/* ═══════════════ DEBRIEF ═══════════════ */
+#s-debrief{padding:1.5rem;max-width:700px;width:100%;}
+.debrief-card{
+  background:var(--panel);border:1px solid var(--border);
+  padding:1.3rem 1.5rem;margin-bottom:1rem;
+}
+.debrief-card-title{font-family:'Cinzel',serif;font-size:1rem;font-weight:700;color:var(--teal);letter-spacing:.05em;margin-bottom:.6rem;}
+.debrief-card-body{font-size:.98rem;line-height:1.7;color:var(--text);}
+.debrief-card-body strong{color:var(--gold-l);}
+
+/* ═══════════════ SHARED UI ═══════════════ */
+.section-label{font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.3em;color:var(--gold);margin-bottom:.4rem;}
+.section-title{font-family:'Cinzel',serif;font-size:clamp(1.4rem,4vw,2rem);font-weight:900;color:var(--white);margin-bottom:.3rem;}
+.gold-bar{width:60px;height:2px;background:var(--gold);margin-bottom:1.2rem;}
+.penalty-flash{position:fixed;inset:0;background:rgba(231,76,60,.18);pointer-events:none;z-index:8000;opacity:0;transition:opacity .1s;}
+.penalty-flash.on{opacity:1;}
+.score-line{
+  font-family:'Share Tech Mono',monospace;font-size:.8rem;color:var(--muted);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.6rem .9rem;background:var(--panel);border:1px solid var(--border);margin-bottom:1.2rem;
+}
+.score-val{color:var(--gold);}
+.team-name-display{color:var(--teal);font-weight:600;}
+
+/* mobile fine-tuning */
+@media(max-width:420px){
+  .code-box{width:55px;height:72px;}
+  .code-num{font-size:2rem;}
+}
+
+/* fade-in helpers */
+.fi{animation:fadeIn .5s ease both;}
+.fi1{animation:fadeIn .5s .1s ease both;}
+.fi2{animation:fadeIn .5s .2s ease both;}
+.fi3{animation:fadeIn .5s .3s ease both;}
+.fi4{animation:fadeIn .5s .4s ease both;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="penalty-flash" id="pFlash"></div>
+
+<!-- ══════════════ COVER ══════════════ -->
+<div class="screen active" id="s-cover">
+  <div class="grid-bg"></div>
+  <div class="vault-ring"><div class="vault-emoji">🏦</div></div>
+  <h1 class="cover-title fi">THE EURO VAULT</h1>
+  <p class="cover-sub fi1">ECB ESCAPE GAME</p>
+  <div class="cover-line fi2"></div>
+  <p class="cover-desc fi2">4 MODULES · TEAM CHALLENGE · RESTORE THE ECB</p>
+  <button class="btn fi3" onclick="go('s-team')">ENTER THE VAULT →</button>
+</div>
+
+<!-- ══════════════ TEAM ENTRY ══════════════ -->
+<div class="screen" id="s-team" style="justify-content:center;padding:2rem 1.5rem;max-width:480px;margin:0 auto;width:100%;">
+  <div style="margin-bottom:2rem;">
+    <p class="section-label fi">AGENT REGISTRATION</p>
+    <h2 class="section-title fi1">Your Team</h2>
+    <div class="gold-bar fi1"></div>
+    <p class="fi2" style="font-size:1rem;color:var(--muted);margin-bottom:1.5rem;">
+      Form teams of 3–4 with the people around you. Enter your team name to begin.
+    </p>
+    <div class="fi3">
+      <label class="form-label">TEAM NAME</label>
+      <input class="form-input" id="teamNameInput" type="text" placeholder="e.g. The Bundesbankers" maxlength="30">
+      <label class="form-label">NUMBER OF PLAYERS</label>
+      <select class="form-input" id="playerCount" style="cursor:pointer;">
+        <option value="3">3 players</option>
+        <option value="4">4 players</option>
+        <option value="2">2 players</option>
+        <option value="1">Solo</option>
+      </select>
+    </div>
+    <div class="doc-key fi4" style="margin-bottom:1.5rem;">
+      <strong>⚠️ RULES:</strong> 4 modules. Read the briefing before each one. Every wrong answer costs <strong>−30 seconds</strong>. You have <strong>3 hints</strong> for the whole game. The team with the highest score wins.
+    </div>
+    <button class="btn fi4" onclick="registerTeam()">CONFIRM TEAM →</button>
+  </div>
+</div>
+
+<!-- ══════════════ BRIEFING ══════════════ -->
+<div class="screen" id="s-briefing">
+  <div id="briefingContent" style="max-width:700px;width:100%;padding:1.5rem;"></div>
+</div>
+
+<!-- ══════════════ ROOM ══════════════ -->
+<div class="screen" id="s-room">
+  <div id="roomContent" style="max-width:680px;width:100%;padding:1rem 1.2rem;"></div>
+</div>
+
+<!-- ══════════════ MODULE COMPLETE ══════════════ -->
+<div class="screen" id="s-modcomplete">
+  <div class="complete-ring"><div class="complete-icon">🔓</div></div>
+  <p class="section-label fi">MODULE CLEARED</p>
+  <h2 class="complete-title fi1" id="mc-title">MODULE 1 UNLOCKED</h2>
+  <p class="fi2" style="font-size:1rem;color:var(--muted);">Vault digit revealed:</p>
+  <div class="complete-digit fi3" id="mc-digit">?</div>
+  <p class="complete-meta fi3" id="mc-score"></p>
+  <p class="penalty-note fi3" id="mc-penalty"></p>
+  <div style="display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center;" class="fi4">
+    <button class="btn" id="mc-next-btn" onclick="nextModule()">NEXT MODULE →</button>
+  </div>
+</div>
+
+<!-- ══════════════ VAULT UNLOCKED ══════════════ -->
+<div class="screen" id="s-vault">
+  <div class="particles" id="ptContainer"></div>
+  <div style="position:relative;z-index:1;width:100%;">
+    <div style="font-size:5rem;margin-bottom:1rem;animation:spin 8s linear infinite;display:inline-block;">🔓</div>
+    <h2 class="vault-title fi">VAULT UNLOCKED!</h2>
+    <p class="fi1" style="font-family:'Cinzel',serif;font-size:1rem;color:var(--teal);letter-spacing:.25em;margin-bottom:.3rem;">THE EURO IS SAVED</p>
+    <div class="cover-line fi2"></div>
+    <p class="fi2" style="font-size:.9rem;color:var(--muted);margin-bottom:.3rem;">Team: <span style="color:var(--teal);" id="vault-team"></span></p>
+    <p class="fi2" style="font-size:.85rem;color:var(--muted);margin-bottom:1rem;">Time remaining: <span style="color:var(--gold);font-family:'Share Tech Mono',monospace;" id="vault-time"></span> &nbsp;|&nbsp; Penalties: <span style="color:var(--red);font-family:'Share Tech Mono',monospace;" id="vault-penalties"></span></p>
+    <div class="code-boxes fi3" id="codeBoxes"></div>
+    <p style="font-size:.85rem;color:var(--muted);" class="fi4">4-digit vault code restored ↑</p>
+    <button class="btn fi4" onclick="go('s-debrief')" style="margin-top:1.5rem;">VIEW DEBRIEF →</button>
+  </div>
+</div>
+
+<!-- ══════════════ DEBRIEF ══════════════ -->
+<div class="screen" id="s-debrief">
+  <div style="max-width:700px;width:100%;padding:1.5rem;">
+    <p class="section-label fi">MISSION COMPLETE</p>
+    <h2 class="section-title fi1">Key Takeaways</h2>
+    <div class="gold-bar fi1"></div>
+    <p style="font-size:1rem;color:var(--muted);margin-bottom:1.2rem;" class="fi2">Everything you just proved you knew:</p>
+    <div class="debrief-card fi2">
+      <div class="debrief-card-title">📜 MODULE 1 — The Road to Monetary Union</div>
+      <div class="debrief-card-body">Two motivations: <strong>economic</strong> (remove exchange-rate friction in the single market) and <strong>political</strong> (currency as symbol of integration). The <strong>Werner Report (1969)</strong> was the first attempt but collapsed with Bretton Woods (1971). The <strong>Snake (1972)</strong> tried to keep currencies within ±2.25% but collapsed after the oil shock (1973) — becoming a DM zone. The <strong>EMS (1979)</strong> and its Exchange Rate Mechanism succeeded from 1983 onward thanks to France's "competitive disinflation" and the <strong>Deutschmark effect</strong>. The <strong>Delors Report (1988)</strong> paved the way to Maastricht.</div>
+    </div>
+    <div class="debrief-card fi3">
+      <div class="debrief-card-title">⚖️ MODULE 2 — The Maastricht Treaty</div>
+      <div class="debrief-card-body">Signed 1991, ratified 1992. Transformed the EEC into the EU. Three stages toward EMU, culminating <strong>January 1st 1999</strong>. Five convergence criteria: <strong>inflation ≤ 1.5%</strong> above 3 lowest; <strong>long-term rates ≤ 2%</strong> above 3 lowest; <strong>exchange rate stability ≥ 2 years</strong>; <strong>debt ≤ 60% GDP</strong>; <strong>deficit ≤ 3% GDP</strong>. Only Luxembourg met all 5 in 1991. Strong <strong>German influence</strong>: ECB modelled on Bundesbank, HQ in Frankfurt. A "<strong>two-speed Europe</strong>": core EMU members vs. opt-outs (UK, Denmark).</div>
+    </div>
+    <div class="debrief-card fi4">
+      <div class="debrief-card-title">🏛️ MODULE 3 — ESCB vs. Eurosystem & Structure</div>
+      <div class="debrief-card-body"><strong>ESCB</strong> = ECB + all EU NCBs (including non-euro). <strong>Eurosystem</strong> = ECB + euro-area NCBs only. Three bodies: <strong>Governing Council</strong> (sets rates & policy), <strong>Executive Board</strong> (daily ops, 8-year non-renewable terms), <strong>General Council</strong> (coordinates all EU NCBs). Full <strong>institutional independence</strong> — no government instructions allowed. ECB is supranational; NCBs keep national legal personality.</div>
+    </div>
+    <div class="debrief-card fi4" style="animation-delay:.5s;">
+      <div class="debrief-card-title">🎯 MODULE 4 — Price Stability, Independence & Infrastructure</div>
+      <div class="debrief-card-body">Primary objective: <strong>HICP below but close to 2%</strong> over the medium term. <strong>Two-pillar strategy</strong>: Economic Analysis (short-term: wages, activity, financial conditions) cross-checked with Monetary Analysis (long-term: money supply & prices). <strong>Four types of independence</strong>: institutional, personal, functional, financial. <strong>TARGET2</strong>: real-time euro settlement system — instant, central bank money, reduces systemic risk. Euro: <strong>7 banknote denominations</strong> (€5–€500), <strong>8 coin denominations</strong> (1 cent–€2).</div>
+    </div>
+    <button class="btn" onclick="resetGame()" style="margin-top:1rem;">PLAY AGAIN ↩</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// GAME DATA
+// ═══════════════════════════════════════════════════════════════
+const MODULES = [
+  {
+    id: 1,
+    name: "The Road to Monetary Union",
+    icon: "🕰️",
+    digit: "7",
+    color: "#1a4a6b",
+    briefingSections: [
+      {
+        heading: "Why a Monetary Union?",
+        body: `<p>European leaders wanted a monetary union for <strong>two main reasons</strong>.</p>
+        <p><strong>Economic reason:</strong> A truly integrated European market — where goods, services and capital move freely — cannot function smoothly with a dozen currencies and fluctuating exchange rates. That creates transaction costs and trade uncertainty. A single currency was the logical completion of the single market.</p>
+        <p><strong>Political reason:</strong> Money is symbolic. A shared currency was seen as a step toward deeper political union — if we share a currency, we cooperate more on foreign policy, defence and social issues.</p>
+        <div class="doc-note">Both advocates and opponents of European integration knew the single currency would be the "thin end of the wedge" — it would force countries to cooperate further.</div>`
+      },
+      {
+        heading: "The First Attempt — Werner Report (1969)",
+        body: `<p>Serious discussion began in the 1960s. In <strong>1969</strong>, the <strong>Werner Report</strong> proposed a three-stage transition to full monetary union within ten years. A great idea — terrible timing.</p>
+        <p>Within weeks of publication, the entire global monetary system — <strong>Bretton Woods</strong> — began to collapse.</p>
+        <div class="doc-key"><strong>Bretton Woods (post-WWII):</strong> Every major currency was pegged to the US dollar, which was convertible to gold. A global anchor. For Europe, this meant exchange rate stability required zero effort. Nixon suspended dollar-gold convertibility in <strong>1971</strong>. Bretton Woods collapsed. Europe lost its anchor.</div>`
+      },
+      {
+        heading: "The Snake in the Tunnel (1972)",
+        body: `<p>Europe's response: the <strong>Snake</strong> (1972). Keep European currencies within a <strong>±2.25% band</strong> against each other. Six founding members, joined shortly after by UK, Ireland, Denmark. It lasted about two years.</p>
+        <p><strong>Why it failed:</strong> The 1973 oil shock hit countries differently. Germany tightened monetary policy; France, Italy and the UK let inflation run. By 1975, only Germany, Belgium, Netherlands, Luxembourg and Denmark remained. France left twice. The UK lasted six weeks.</p>
+        <div class="doc-key"><strong>Key lesson:</strong> You cannot keep exchange rates fixed if your economies are moving in different directions. The Snake had become, in practice, a <em>Deutsche Mark zone</em>. <strong>You need convergence.</strong></div>`
+      },
+      {
+        heading: "The EMS & Exchange Rate Mechanism (1979)",
+        body: `<p>In <strong>March 1979</strong>, the <strong>European Monetary System (EMS)</strong> replaced the Snake. More sophisticated: a "parity grid" of fixed exchange rates, ±2.25% fluctuation bands, but crucially — <strong>realignments were allowed</strong>, and <strong>capital controls</strong> limited speculation.</p>
+        <p>First four years: seven realignments. But from <strong>1983</strong>, France under Mitterrand chose "competitive disinflation" — keeping the franc strong through low inflation, even at the cost of higher interest rates. From <strong>1987 to 1992: zero major realignments</strong>.</p>
+        <p>Two reasons for success: the <strong>Single European Act (1986)</strong> removed capital controls, forcing countries to fully commit to stability; and the <strong>"Deutschmark effect"</strong> — countries imported the Bundesbank's credibility.</p>
+        <div class="doc-note">By the late 1980s, the EMS was a success. This momentum led to the Delors Report (1988) and ultimately the Maastricht Treaty (1991).</div>`
+      }
+    ],
+    questions: [
+      {
+        type: "order",
+        text: "Put these four events in the correct chronological order (drag to reorder):",
+        items: [
+          { id:"a", text:"🐍 The Snake is created (±2.25% band)" },
+          { id:"b", text:"💵 Bretton Woods collapses (Nixon suspends gold convertibility)" },
+          { id:"c", text:"🛢️ Oil shock destroys the Snake" },
+          { id:"d", text:"🇪🇺 EMS and the Exchange Rate Mechanism established" }
+        ],
+        correctOrder: ["b","a","c","d"],
+        hint: "Think: what provided exchange rate stability BEFORE the Snake was needed? The Snake is a response to something collapsing.",
+        feedback: "Correct order: Bretton Woods collapses (1971) → Snake created as response (1972) → Oil shock destroys it (1973) → EMS replaces it (1979)."
+      },
+      {
+        type: "mc",
+        text: "By 1975, which statement best describes what had happened to the Snake?",
+        options: [
+          "All original members remained — the Snake was functioning as intended",
+          "The Snake had been formally dissolved by the European Council",
+          "The Snake had become a Deutsche Mark zone, with only Germany, Benelux and Denmark remaining",
+          "France had taken over leadership of the Snake from Germany"
+        ],
+        correct: 2,
+        hint: "Which country's monetary policy did everyone else have to follow? Which countries could keep up?",
+        feedback: "The Snake became a DM zone. Germany, Belgium, Netherlands, Luxembourg, Denmark remained. France left twice. The UK lasted just six weeks. Economic divergence made fixed rates impossible."
+      },
+      {
+        type: "mc",
+        text: "What was the key reason the EMS succeeded from 1983 onward, after years of turbulence?",
+        options: [
+          "The oil price fell back to 1972 levels, removing economic pressure",
+          "The US dollar was re-pegged to gold, restoring global stability",
+          "France chose 'competitive disinflation' — prioritising low inflation over growth — and imported Germany's monetary credibility",
+          "Capital controls were introduced across Europe for the first time"
+        ],
+        correct: 2,
+        hint: "Which country made a decisive political choice in 1983? What was the 'Deutschmark effect'?",
+        feedback: "France under Mitterrand chose competitive disinflation from 1983: low inflation even at the cost of slow growth. Countries essentially imported the Bundesbank's credibility — the 'Deutschmark effect'."
+      }
+    ]
+  },
+  {
+    id: 2,
+    name: "The Maastricht Treaty",
+    icon: "⚖️",
+    digit: "9",
+    color: "#1a5c40",
+    briefingSections: [
+      {
+        heading: "Context & Objectives",
+        body: `<p>Signed in <strong>December 1991</strong> in Maastricht, Netherlands. Ratified by all member states in <strong>1992</strong>. It updates the 1957 Treaty of Rome and integrates the Single European Act.</p>
+        <p>It officially transforms the <strong>European Economic Community (EEC)</strong> into the <strong>European Union (EU)</strong>. It introduces both economic and political integration and establishes the <strong>Three Pillars of the EU</strong>: European Communities, Common Foreign and Security Policy, and Justice and Home Affairs.</p>
+        <p><strong>Main goal:</strong> Create an Economic and Monetary Union (EMU) — single currency, coordinated economic policies, stronger institutions. The euro was seen as the final step of a long process of economic convergence.</p>
+        <div class="doc-note">The single currency would facilitate trade, reduce transaction costs, stabilize exchange rates, strengthen Europe's global position and symbolize European unity.</div>`
+      },
+      {
+        heading: "3 Stages Toward the Single Currency (Thysesen, 1993)",
+        body: `<ul>
+          <li><strong>Stage 1 (1992):</strong> Ratification of the Maastricht Treaty.</li>
+          <li><strong>Stage 2 (January 1994):</strong> National central banks become independent; cannot lend to governments; creation of the <strong>European Monetary Institute (EMI)</strong> — prepares the ECB and monitors convergence criteria.</li>
+          <li><strong>Stage 3 (by January 1st, 1999):</strong> When enough countries meet the criteria — introduction of the single currency and creation of the ECB.</li>
+        </ul>`
+      },
+      {
+        heading: "The 5 Convergence Criteria",
+        body: `<p>To adopt the euro, countries must satisfy <strong>5 criteria</strong>:</p>
+        <p><strong>Monetary (3):</strong></p>
+        <ul>
+          <li>Inflation: must not exceed <strong>1.5%</strong> above the average of the three lowest-inflation countries</li>
+          <li>Long-term interest rates: must not exceed <strong>2%</strong> above those of the three lowest-inflation countries</li>
+          <li>Exchange rate stability: must remain within EMS bands for at least <strong>2 years</strong></li>
+        </ul>
+        <p><strong>Fiscal (2):</strong></p>
+        <ul>
+          <li>Public debt: must not exceed <strong>60% of GDP</strong></li>
+          <li>Budget deficit: must not exceed <strong>3% of GDP</strong></li>
+        </ul>
+        <div class="doc-key"><strong>Key fact:</strong> In 1991 at signing, only <strong>Luxembourg</strong> met all 5 criteria. The Excessive Deficit Procedure (June 1997) made the 3% deficit ceiling permanent — violators face warnings, public criticism and financial penalties.</div>`
+      },
+      {
+        heading: "German Influence & Two-Speed Europe",
+        body: `<p>Germany's view prevailed on virtually every issue:</p>
+        <ul>
+          <li><strong>Name:</strong> "Euro" (not ECU — rejected as the name of an old French coin)</li>
+          <li><strong>ECB model:</strong> Based on the Bundesbank — strong independence, focus on price stability, no lender-of-last-resort function</li>
+          <li><strong>Location:</strong> ECB headquarters in Frankfurt</li>
+          <li><strong>Strict criteria:</strong> Long transition, tight fiscal rules</li>
+        </ul>
+        <p>The treaty allowed a <strong>"two-speed Europe"</strong>: a core group joining EMU and a periphery either not meeting criteria or opting out. UK and Denmark negotiated formal opt-outs. The "Club Med" debate: would Italy, Spain and Portugal qualify despite poor track records?</p>`
+      }
+    ],
+    questions: [
+      {
+        type: "mc",
+        text: "The Maastricht Treaty established three stages toward the euro. What was the SPECIFIC role of the European Monetary Institute (EMI), created in Stage 2?",
+        options: [
+          "To replace national currencies with the euro immediately",
+          "To set interest rates for all EU member states",
+          "To prepare the creation of the ECB and monitor whether countries met the convergence criteria",
+          "To negotiate trade agreements on behalf of the EU"
+        ],
+        correct: 2,
+        hint: "The EMI was a precursor institution. Think: what two tasks needed doing before Stage 3 could begin?",
+        feedback: "The EMI (created January 1994) had two roles: prepare the creation of the ECB, and monitor convergence criteria. It marked the beginning of Stage 3 once countries qualified."
+      },
+      {
+        type: "mc",
+        text: "Which of the following is NOT one of the 5 Maastricht convergence criteria?",
+        options: [
+          "Budget deficit must not exceed 3% of GDP",
+          "Unemployment rate must not exceed 8%",
+          "Public debt must not exceed 60% of GDP",
+          "Inflation must not exceed 1.5% above the average of the three lowest-inflation countries"
+        ],
+        correct: 1,
+        hint: "The criteria focus on monetary and fiscal stability — not the labour market.",
+        feedback: "Unemployment is NOT a Maastricht criterion. The 5 criteria are: inflation, long-term interest rates, exchange rate stability, public debt ≤ 60% GDP, deficit ≤ 3% GDP."
+      },
+      {
+        type: "mc",
+        text: "Germany had enormous influence over the design of the euro. Which of the following best reflects that influence?",
+        options: [
+          "The euro was named the ECU, and the ECB was headquartered in Paris",
+          "The ECB was modelled on the Bundesbank: strong independence, price stability focus, no lender-of-last-resort function — and was headquartered in Frankfurt",
+          "Germany insisted on a weak euro to boost its exports",
+          "Germany demanded that all EU countries join the euro immediately in 1999"
+        ],
+        correct: 1,
+        hint: "Think about what the Bundesbank stood for. Where is Germany's financial capital?",
+        feedback: "Germany's fingerprints are everywhere: ECB modelled on Bundesbank, strong independence, price stability mandate, no lender-of-last-resort, HQ in Frankfurt. Even the name 'euro' was chosen over 'ECU' at German insistence."
+      }
+    ]
+  },
+  {
+    id: 3,
+    name: "ESCB, Eurosystem & Institutional Structure",
+    icon: "🏛️",
+    digit: "9",
+    color: "#5c3a1a",
+    briefingSections: [
+      {
+        heading: "ESCB vs. the Eurosystem",
+        body: `<p>Two related but distinct entities:</p>
+        <div class="doc-key"><strong>ESCB (European System of Central Banks):</strong> The ECB + the national central banks (NCBs) of ALL EU member states — including countries that have NOT adopted the euro.</div>
+        <div class="doc-key"><strong>Eurosystem:</strong> The ECB + only the NCBs of countries that USE the euro. Responsible for the single monetary policy.</div>
+        <p>The ECB is a <strong>supranational institution</strong>. NCBs remain national institutions with their own legal personality but must follow ECB guidelines. The ECB defines monetary policy strategy; NCBs implement it (providing liquidity to banks, issuing euro banknotes).</p>`
+      },
+      {
+        heading: "The Three Decision-Making Bodies",
+        body: `<ul>
+          <li><strong>Governing Council</strong> (most important): ECB Executive Board + governors of euro-area NCBs. Sets interest rates and defines monetary policy.</li>
+          <li><strong>Executive Board</strong>: 6 members including the President. Manages daily operations, implements Governing Council decisions. Members serve a <strong>non-renewable 8-year term</strong>.</li>
+          <li><strong>General Council</strong>: ECB President + Vice-President + governors of ALL EU NCBs (including non-euro). Focuses on coordination and preparation for euro adoption.</li>
+        </ul>
+        <p>ESCB Committees support technical cooperation between the ECB and NCBs in areas like supervision, banknotes and legal matters.</p>`
+      },
+      {
+        heading: "Institutional Independence",
+        body: `<p>Independence is a fundamental principle — ensuring monetary policy focuses on price stability without political interference. Four dimensions:</p>
+        <ul>
+          <li><strong>Institutional:</strong> Cannot receive instructions from governments, EU institutions or any external body.</li>
+          <li><strong>Personal:</strong> NCB governors serve at least 5-year terms; ECB Executive Board members serve non-renewable 8-year terms — removable only for incapacity or serious misconduct (disputes settled by the Court of Justice of the EU).</li>
+          <li><strong>Functional:</strong> Full authority over monetary policy instruments.</li>
+          <li><strong>Financial:</strong> Prohibition on financing public sector deficits.</li>
+        </ul>
+        <div class="doc-note">Both the ECB and NCBs have their own legal personality, reinforcing institutional autonomy.</div>`
+      }
+    ],
+    questions: [
+      {
+        type: "mc",
+        text: "Sweden joined the EU but has not adopted the euro. Which institution(s) is the Swedish central bank (Riksbank) part of?",
+        options: [
+          "Neither — non-euro countries have no role in ECB structures",
+          "The Eurosystem only",
+          "The ESCB only",
+          "Both the ESCB and the Eurosystem"
+        ],
+        correct: 2,
+        hint: "The Eurosystem is for euro-area countries. The ESCB covers all EU member states.",
+        feedback: "The Riksbank is part of the ESCB (ECB + ALL EU NCBs) but NOT the Eurosystem (ECB + euro-area NCBs only). Sweden is in the EU but hasn't adopted the euro."
+      },
+      {
+        type: "mc",
+        text: "An ECB Executive Board member is elected by their national government. They serve 4-year renewable terms and can be removed if the government changes its political preferences. TRUE or FALSE?",
+        options: [
+          "True — governments appoint and can recall Executive Board members",
+          "False — they serve non-renewable 8-year terms and can only be removed for incapacity or serious misconduct",
+          "Partly true — terms are 8 years but ARE renewable once",
+          "False — they serve for life, similar to Supreme Court justices"
+        ],
+        correct: 1,
+        hint: "Think about why independence requires that members can't be reappointed — what behaviour would that incentivise?",
+        feedback: "FALSE. Executive Board members serve a single NON-RENEWABLE 8-year term. They can only be removed for incapacity or serious misconduct. Non-renewability protects independence: members can't be influenced by hopes of reappointment."
+      },
+      {
+        type: "mc",
+        text: "Which ECB body includes the governors of ALL EU central banks — including non-euro-area countries — and is focused on coordination rather than setting monetary policy?",
+        options: [
+          "The Governing Council",
+          "The Executive Board",
+          "The General Council",
+          "The ESCB Supervisory Board"
+        ],
+        correct: 2,
+        hint: "You need the body that bridges the euro area and the wider EU. Coordination, not policy-setting.",
+        feedback: "The General Council includes the ECB President, Vice-President, and governors of ALL EU NCBs (euro and non-euro). It focuses on coordination and preparing countries for euro adoption — NOT on setting interest rates (that's the Governing Council)."
+      }
+    ]
+  },
+  {
+    id: 4,
+    name: "Price Stability, Policy & Infrastructure",
+    icon: "🎯",
+    digit: "8",
+    color: "#4a1a6b",
+    briefingSections: [
+      {
+        heading: "Primary Objective: Price Stability",
+        body: `<p>The primary objective of the Eurosystem is to maintain <strong>price stability</strong>. Other objectives (employment, growth) are supported only when they don't conflict with price stability.</p>
+        <div class="doc-key"><strong>Official ECB definition:</strong> A year-on-year increase in the <strong>Harmonised Index of Consumer Prices (HICP) of below but close to 2%</strong> in the euro area, maintained over the <strong>medium term</strong>.</div>
+        <p>The medium-term framing allows a forward-looking approach and avoids risks like deflation. The target is "below but close to 2%" — not exactly 2%, not zero.</p>`
+      },
+      {
+        heading: "The Two-Pillar Strategy",
+        body: `<p>Monetary policy decisions are based on a <strong>cross-check of two analyses</strong>:</p>
+        <div class="doc-key"><strong>Pillar 1 — Economic Analysis:</strong> Short- to medium-term factors affecting inflation: economic activity, wages, financial conditions, supply and demand dynamics.</div>
+        <div class="doc-key"><strong>Pillar 2 — Monetary Analysis:</strong> Longer-term trends — the relationship between <strong>money supply</strong> and prices. Based on the insight that inflation is ultimately a monetary phenomenon over the long run.</div>
+        <p>Cross-checking both pillars helps ensure consistency, stabilise inflation expectations and strengthen the ECB's credibility.</p>`
+      },
+      {
+        heading: "TARGET2 & Euro Currency",
+        body: `<p><strong>TARGET2</strong> is the euro area's real-time gross settlement payment system. Used to settle central bank operations and large interbank transfers. Payments are processed <strong>instantly in central bank money</strong>, reducing systemic risk. Together with SEPA, it treats cross-border euro payments like domestic ones.</p>
+        <p><strong>Euro banknotes:</strong> 7 denominations (€5 to €500). Designs feature architectural styles from different periods of European history — windows and gateways symbolise openness; bridges represent cooperation. Advanced security features and accessibility elements for visually impaired users.</p>
+        <p><strong>Euro coins:</strong> 8 denominations (1 cent to €2). Each coin has a <strong>common European side</strong> and a <strong>national side</strong>, but all are valid across the entire euro area.</p>`
+      }
+    ],
+    questions: [
+      {
+        type: "mc",
+        text: "The ECB's price stability target is 'exactly 2% inflation per year, measured by the CPI, and must be hit every single month.' TRUE or FALSE?",
+        options: [
+          "True — the ECB has a strict 2% monthly CPI target",
+          "False — it is HICP below but close to 2%, maintained over the medium term (not month-by-month, not exactly 2%)",
+          "True — but it's measured quarterly, not monthly",
+          "False — the target is 0% inflation (complete price stability)"
+        ],
+        correct: 1,
+        hint: "Three things to check: the index used (CPI vs HICP), the exact level (exactly 2% vs below-but-close), and the time horizon (monthly vs medium term).",
+        feedback: "FALSE on three counts: the index is HICP (not CPI); the target is 'below but close to 2%' (not exactly 2%); and it's over the medium term (not month-by-month). This flexibility lets the ECB take a forward-looking approach."
+      },
+      {
+        type: "mc",
+        text: "Which description correctly matches the TWO pillars of the ECB's monetary strategy?",
+        options: [
+          "Pillar 1 analyses fiscal deficits; Pillar 2 analyses trade balances",
+          "Pillar 1 analyses short-to-medium-term inflation drivers (activity, wages, financial conditions); Pillar 2 analyses long-term money supply trends",
+          "Pillar 1 sets interest rates; Pillar 2 monitors exchange rates",
+          "Both pillars analyse inflation — they just cover different countries"
+        ],
+        correct: 1,
+        hint: "One pillar is forward-looking and economy-focused; the other is about the quantity of money in circulation over the long run.",
+        feedback: "Pillar 1 = Economic Analysis (short-to-medium term: activity, wages, financial conditions). Pillar 2 = Monetary Analysis (long-term: money supply and prices). Both are cross-checked to ensure robust policy decisions."
+      },
+      {
+        type: "mc",
+        text: "Which statement about TARGET2 is CORRECT?",
+        options: [
+          "TARGET2 is a shared EU budget mechanism for transferring funds between governments",
+          "TARGET2 is a real-time settlement system processing payments instantly in central bank money, reducing systemic risk",
+          "TARGET2 is the ECB's inflation targeting framework, updated in 2002",
+          "TARGET2 is a multilateral trade agreement between euro-area members"
+        ],
+        correct: 1,
+        hint: "Think about payment infrastructure — what's needed to settle large transactions between banks instantly and safely?",
+        feedback: "TARGET2 is the euro area's real-time gross settlement system. It processes interbank and central bank payments instantly in central bank money — the safest form of settlement. Together with SEPA, it integrates European payments."
+      }
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let G = {
+  teamName: '',
+  currentModule: 0,          // 0-based index into MODULES
+  hintsLeft: 3,
+  hintsUsedThisRoom: [],     // which q indices got a hint
+  penalties: 0,              // total penalty seconds
+  correctCount: 0,
+  totalSeconds: 45 * 60,
+  timerInterval: null,
+  digits: [],
+  questionStates: [],        // per question: null | 'correct' | 'wrong'
+  orderState: [],            // current drag order for ordering questions
+};
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TEAM REGISTER
+// ═══════════════════════════════════════════════════════════════
+function registerTeam() {
+  const name = document.getElementById('teamNameInput').value.trim();
+  if (!name) { alert('Please enter a team name!'); return; }
+  G.teamName = name;
+  startTimer();
+  showBriefing(0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════════════════════════════
+function startTimer() {
+  clearInterval(G.timerInterval);
+  G.timerInterval = setInterval(() => {
+    G.totalSeconds = Math.max(0, G.totalSeconds - 1);
+    updateTimerDisplays();
+  }, 1000);
+}
+
+function updateTimerDisplays() {
+  const str = formatTime(G.totalSeconds);
+  document.querySelectorAll('.timer-box').forEach(el => {
+    el.textContent = str;
+    el.className = 'timer-box' + (G.totalSeconds < 120 ? ' crit' : G.totalSeconds < 300 ? ' warn' : '');
+  });
+}
+
+function formatTime(secs) {
+  const m = Math.floor(secs / 60), s = secs % 60;
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+function applyPenalty() {
+  G.penalties += 30;
+  G.totalSeconds = Math.max(0, G.totalSeconds - 30);
+  updateTimerDisplays();
+  const fl = document.getElementById('pFlash');
+  fl.classList.add('on');
+  setTimeout(() => fl.classList.remove('on'), 400);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BRIEFING
+// ═══════════════════════════════════════════════════════════════
+function showBriefing(moduleIdx) {
+  G.currentModule = moduleIdx;
+  const mod = MODULES[moduleIdx];
+  G.questionStates = new Array(mod.questions.length).fill(null);
+  G.hintsUsedThisRoom = [];
+  G.orderState = mod.questions
+    .filter(q => q.type === 'order')
+    .map(q => [...q.items]);
+
+  let html = `
+    <div style="margin-bottom:1.5rem;" class="fi">
+      <p class="section-label">MODULE ${mod.id} OF ${MODULES.length}</p>
+      <h2 class="section-title">${mod.icon} ${mod.name}</h2>
+      <div class="gold-bar"></div>
+    </div>
+    <div class="score-line fi1">
+      <span>TEAM: <span class="team-name-display">${G.teamName}</span></span>
+      <span>⏱ <span class="timer-box">${formatTime(G.totalSeconds)}</span></span>
+      <span>HINTS: <span class="score-val">${G.hintsLeft}</span></span>
+    </div>
+    <div class="doc-note fi1" style="margin-bottom:1.2rem;">
+      📖 Read this briefing carefully — your team will be tested on it immediately after.
+    </div>
+  `;
+
+  mod.briefingSections.forEach((sec, i) => {
+    html += `
+      <div class="doc-section fi${Math.min(i+2,4)}" style="margin-bottom:1.4rem;">
+        <div class="doc-heading">${sec.heading}</div>
+        <div class="doc-body">${sec.body}</div>
+      </div>
+    `;
+  });
+
+  html += `
+    <div class="briefing-cta fi4">
+      <div class="cta-warning">
+        <strong>⚠️ ${mod.questions.length} questions ahead.</strong><br>
+        Wrong answer = <strong>−30 seconds</strong>.
+      </div>
+      <button class="btn" onclick="showRoom(${moduleIdx})">ENTER ROOM ${mod.id} →</button>
+    </div>
+  `;
+
+  document.getElementById('briefingContent').innerHTML = html;
+  go('s-briefing');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ROOM
+// ═══════════════════════════════════════════════════════════════
+function showRoom(moduleIdx) {
+  const mod = MODULES[moduleIdx];
+  let orderQIdx = 0; // track ordering question index within ordering questions
+
+  let html = `
+    <div class="room-topbar">
+      <div class="module-pill">MOD ${mod.id}</div>
+      <div class="room-title-bar">${mod.icon} ${mod.name}</div>
+      <div class="timer-box">${formatTime(G.totalSeconds)}</div>
+    </div>
+    <div class="score-line" style="margin-bottom:.8rem;">
+      <span>TEAM: <span class="team-name-display">${G.teamName}</span></span>
+      <span>PENALTIES: <span style="color:var(--red);font-family:'Share Tech Mono',monospace;">−${G.penalties}s</span></span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-fill" id="progBar" style="width:0%"></div>
+    </div>
+    <div class="hints-bar">
+      <span class="hints-label">HINTS:</span>
+      ${[0,1,2].map(i => `<span class="hint-chip${i >= G.hintsLeft ? ' used' : ''}" id="hchip${i}" onclick="useHint(${moduleIdx}, getCurrentQForHint())">💡 HINT ${i+1}</span>`).join('')}
+      <span style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--muted);margin-left:.5rem;">(${G.hintsLeft} remaining total)</span>
+    </div>
+  `;
+
+  mod.questions.forEach((q, qi) => {
+    if (q.type === 'order') {
+      html += buildOrderQ(q, qi, orderQIdx, mod.id);
+      orderQIdx++;
+    } else {
+      html += buildMCQ(q, qi, mod.id);
+    }
+  });
+
+  document.getElementById('roomContent').innerHTML = html;
+  go('s-room');
+
+  // Re-init drag on any order questions
+  mod.questions.forEach((q, qi) => {
+    if (q.type === 'order') initDrag(qi, mod.id);
+  });
+}
+
+let _currentHintQ = 0;
+function getCurrentQForHint() { return _currentHintQ; }
+
+function buildMCQ(q, qi, modId) {
+  const letters = ['A','B','C','D'];
+  return `
+    <div class="q-card" id="qcard-${qi}">
+      <div class="q-num">🔍 QUESTION ${qi+1}</div>
+      <div class="q-text">${q.text}</div>
+      <div class="hint-text" id="hint-${qi}">💡 ${q.hint}</div>
+      <div class="options" id="opts-${qi}">
+        ${q.options.map((opt,oi) => `
+          <button class="opt-btn" id="opt-${qi}-${oi}" onclick="answerMC(${modId-1},${qi},${oi})">
+            <span class="opt-letter">${letters[oi]}.</span>
+            <span>${opt}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="q-feedback" id="fb-${qi}"></div>
+    </div>
+  `;
+}
+
+function buildOrderQ(q, qi, orderIdx, modId) {
+  const shuffled = [...q.items].sort(() => Math.random() - .5);
+  // store shuffled order
+  if (!G.orderState[orderIndex]) G.orderState = [];
+  return `
+    <div class="q-card" id="qcard-${qi}">
+      <div class="q-num">🔍 QUESTION ${qi+1} — DRAG TO ORDER</div>
+      <div class="q-text">${q.text}</div>
+      <div class="hint-text" id="hint-${qi}">💡 ${q.hint}</div>
+      <div class="order-list" id="orderlist-${qi}">
+        ${shuffled.map((item,i) => `
+          <div class="order-item" data-id="${item.id}" draggable="true">
+            <span class="order-handle">${i+1}.</span>
+            <span>${item.text}</span>
+          </div>
+        `).join('')}
+      </div>
+      <button class="check-btn" id="checkbtn-${qi}" onclick="checkOrder(${modId-1},${qi})">CHECK ORDER ✓</button>
+      <div class="q-feedback" id="fb-${qi}"></div>
+    </div>
+  `;
+}
+
+// ─── Drag & Drop ─────────────────────────────────────────────
+function initDrag(qi, modId) {
+  const list = document.getElementById(`orderlist-${qi}`);
+  if (!list) return;
+  let dragged = null;
+
+  list.querySelectorAll('.order-item').forEach(item => {
+    item.addEventListener('dragstart', e => {
+      dragged = item;
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      list.querySelectorAll('.order-item').forEach(i => i.classList.remove('drag-over'));
+      updateHandleNumbers(list);
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (item !== dragged) item.classList.add('drag-over');
+    });
+    item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      item.classList.remove('drag-over');
+      if (dragged && item !== dragged) {
+        const items = [...list.querySelectorAll('.order-item')];
+        const dragIdx = items.indexOf(dragged);
+        const dropIdx = items.indexOf(item);
+        if (dragIdx < dropIdx) list.insertBefore(dragged, item.nextSibling);
+        else list.insertBefore(dragged, item);
+      }
+    });
+
+    // Touch support
+    let touchStartY = 0, touchItem = null;
+    item.addEventListener('touchstart', e => {
+      touchItem = item;
+      touchStartY = e.touches[0].clientY;
+      item.style.opacity = '.5';
+    }, {passive:true});
+    item.addEventListener('touchmove', e => {
+      e.preventDefault();
+      const y = e.touches[0].clientY;
+      const all = [...list.querySelectorAll('.order-item')];
+      let target = null;
+      all.forEach(i => {
+        const r = i.getBoundingClientRect();
+        if (y > r.top && y < r.bottom && i !== touchItem) target = i;
+      });
+      all.forEach(i => i.classList.remove('drag-over'));
+      if (target) target.classList.add('drag-over');
+    }, {passive:false});
+    item.addEventListener('touchend', e => {
+      item.style.opacity = '1';
+      const y = e.changedTouches[0].clientY;
+      const all = [...list.querySelectorAll('.order-item')];
+      let target = null;
+      all.forEach(i => {
+        const r = i.getBoundingClientRect();
+        if (y > r.top && y < r.bottom && i !== touchItem) target = i;
+      });
+      if (target && touchItem) {
+        const dragIdx = all.indexOf(touchItem);
+        const dropIdx = all.indexOf(target);
+        if (dragIdx < dropIdx) list.insertBefore(touchItem, target.nextSibling);
+        else list.insertBefore(touchItem, target);
+      }
+      all.forEach(i => i.classList.remove('drag-over'));
+      updateHandleNumbers(list);
+    });
+  });
+}
+
+function updateHandleNumbers(list) {
+  list.querySelectorAll('.order-item').forEach((item, i) => {
+    item.querySelector('.order-handle').textContent = (i+1) + '.';
+  });
+}
+
+// ─── Answer MC ───────────────────────────────────────────────
+function answerMC(modIdx, qi, selected) {
+  if (G.questionStates[qi] !== null) return;
+  const mod = MODULES[modIdx];
+  const q = mod.questions[qi];
+  const correct = selected === q.correct;
+
+  G.questionStates[qi] = correct ? 'correct' : 'wrong';
+  if (correct) G.correctCount++;
+  else applyPenalty();
+
+  // Disable all options
+  const opts = document.querySelectorAll(`#opts-${qi} .opt-btn`);
+  opts.forEach((btn, oi) => {
+    btn.disabled = true;
+    if (oi === q.correct) btn.classList.add('correct');
+    else if (oi === selected && !correct) btn.classList.add('wrong');
+  });
+
+  const fb = document.getElementById(`fb-${qi}`);
+  fb.className = `q-feedback show ${correct ? 'ok' : 'bad'}`;
+  fb.textContent = correct ? ('✓ ' + q.feedback) : ('✗ Incorrect — −30 sec penalty. ' + q.feedback);
+
+  const card = document.getElementById(`qcard-${qi}`);
+  card.className = `q-card ${correct ? 'correct' : 'wrong'}`;
+
+  _currentHintQ = qi;
+  updateProgress(modIdx);
+  checkAllAnswered(modIdx);
+}
+
+// ─── Check Order ─────────────────────────────────────────────
+function checkOrder(modIdx, qi) {
+  if (G.questionStates[qi] !== null) return;
+  const mod = MODULES[modIdx];
+  const q = mod.questions[qi];
+  const list = document.getElementById(`orderlist-${qi}`);
+  const items = [...list.querySelectorAll('.order-item')];
+  const studentOrder = items.map(i => i.dataset.id);
+  const correct = JSON.stringify(studentOrder) === JSON.stringify(q.correctOrder);
+
+  G.questionStates[qi] = correct ? 'correct' : 'wrong';
+  if (correct) G.correctCount++;
+  else applyPenalty();
+
+  // Lock items
+  items.forEach(item => {
+    item.classList.add('locked-order');
+    item.draggable = false;
+    const idx = q.correctOrder.indexOf(item.dataset.id);
+    item.querySelector('.order-handle').textContent = (idx+1) + '.';
+    if (correct) item.style.borderColor = 'var(--green)';
+    else {
+      const isRight = studentOrder.indexOf(item.dataset.id) === q.correctOrder.indexOf(item.dataset.id);
+      item.style.borderColor = isRight ? 'var(--green)' : 'var(--red)';
+    }
+  });
+
+  document.getElementById(`checkbtn-${qi}`).disabled = true;
+
+  const fb = document.getElementById(`fb-${qi}`);
+  fb.className = `q-feedback show ${correct ? 'ok' : 'bad'}`;
+  fb.textContent = correct ? ('✓ ' + q.feedback) : ('✗ Incorrect — −30 sec penalty. ' + q.feedback);
+
+  const card = document.getElementById(`qcard-${qi}`);
+  card.className = `q-card ${correct ? 'correct' : 'wrong'}`;
+
+  updateProgress(modIdx);
+  checkAllAnswered(modIdx);
+}
+
+// ─── Hint ─────────────────────────────────────────────────────
+function useHint(modIdx, qi) {
+  if (G.hintsLeft <= 0) return;
+  if (G.hintsUsedThisRoom.includes(qi)) return;
+  if (G.questionStates[qi] !== null) return;
+
+  G.hintsLeft--;
+  G.hintsUsedThisRoom.push(qi);
+
+  const hintEl = document.getElementById(`hint-${qi}`);
+  if (hintEl) hintEl.classList.add('show');
+
+  // Update hint chips
+  const usedCount = 3 - G.hintsLeft;
+  document.querySelectorAll('.hint-chip').forEach((chip, i) => {
+    if (i < usedCount) chip.classList.add('used');
+  });
+  document.querySelectorAll('.hints-bar span:last-child').forEach(el => {
+    el.textContent = `(${G.hintsLeft} remaining total)`;
+  });
+}
+
+// ─── Progress ────────────────────────────────────────────────
+function updateProgress(modIdx) {
+  const mod = MODULES[modIdx];
+  const done = G.questionStates.filter(s => s !== null).length;
+  const pct = (done / mod.questions.length) * 100;
+  const bar = document.getElementById('progBar');
+  if (bar) bar.style.width = pct + '%';
+}
+
+function checkAllAnswered(modIdx) {
+  const mod = MODULES[modIdx];
+  if (G.questionStates.every(s => s !== null)) {
+    setTimeout(() => showModuleComplete(modIdx), 700);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MODULE COMPLETE
+// ═══════════════════════════════════════════════════════════════
+function showModuleComplete(modIdx) {
+  const mod = MODULES[modIdx];
+  G.digits.push(mod.digit);
+
+  const correct = G.questionStates.filter(s => s === 'correct').length;
+  const total = mod.questions.length;
+
+  document.getElementById('mc-title').textContent = `MODULE ${mod.id} UNLOCKED`;
+  document.getElementById('mc-digit').textContent = mod.digit;
+  document.getElementById('mc-score').textContent = `${correct}/${total} correct answers`;
+  document.getElementById('mc-penalty').textContent = G.penalties > 0 ? `Total penalties so far: −${G.penalties} seconds` : '';
+
+  const nextBtn = document.getElementById('mc-next-btn');
+  if (modIdx === MODULES.length - 1) {
+    nextBtn.textContent = 'OPEN THE VAULT →';
+    nextBtn.onclick = showVault;
+  } else {
+    nextBtn.textContent = `MODULE ${mod.id + 1}: ${MODULES[modIdx+1].name.toUpperCase()} →`;
+    nextBtn.onclick = () => nextModule();
+  }
+
+  go('s-modcomplete');
+}
+
+function nextModule() {
+  const next = G.currentModule + 1;
+  if (next >= MODULES.length) { showVault(); return; }
+  showBriefing(next);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VAULT UNLOCK
+// ═══════════════════════════════════════════════════════════════
+function showVault() {
+  clearInterval(G.timerInterval);
+
+  document.getElementById('vault-team').textContent = G.teamName;
+  document.getElementById('vault-time').textContent = formatTime(G.totalSeconds);
+  document.getElementById('vault-penalties').textContent = `−${G.penalties}s`;
+
+  const boxes = document.getElementById('codeBoxes');
+  boxes.innerHTML = '';
+  MODULES.forEach((mod, i) => {
+    const box = document.createElement('div');
+    box.className = 'code-box';
+    box.style.opacity = '0';
+    box.innerHTML = `<div class="code-num">${mod.digit}</div><div class="code-lbl">MOD ${mod.id}</div>`;
+    boxes.appendChild(box);
+    setTimeout(() => {
+      box.style.transition = 'opacity .5s, transform .5s';
+      box.style.opacity = '1';
+      box.style.transform = 'translateY(0)';
+    }, 200 + i * 180);
+    box.style.transform = 'translateY(20px)';
+  });
+
+  // Particles
+  const pt = document.getElementById('ptContainer');
+  pt.innerHTML = '';
+  for (let i = 0; i < 35; i++) {
+    const p = document.createElement('div');
+    p.className = 'pt';
+    p.style.cssText = `left:${Math.random()*100}%;animation-delay:${Math.random()*2.5}s;animation-duration:${2+Math.random()*2}s;background:${Math.random()>.5?'var(--gold)':'var(--green)'};`;
+    pt.appendChild(p);
+  }
+
+  go('s-vault');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════════════════════
+function resetGame() {
+  clearInterval(G.timerInterval);
+  G = { teamName:'', currentModule:0, hintsLeft:3, hintsUsedThisRoom:[], penalties:0, correctCount:0, totalSeconds:45*60, timerInterval:null, digits:[], questionStates:[], orderState:[] };
+  go('s-cover');
+}
+
+// Fix the orderState initialization bug
+const orderIndex = 0; // dummy — was used inline, fixed in initDrag
+</script>
+</body>
+</html>
